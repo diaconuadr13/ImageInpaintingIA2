@@ -1,0 +1,12 @@
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.svg
+data_pets
+models
+.vscode
+.venv
+__pycache__

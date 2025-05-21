@@ -22,9 +22,9 @@ from data_loader import OxfordPetInpaintingDataset, transform # Your existing da
 IMG_SIZE = 128 # Keep consistent with your dataset
 BATCH_SIZE = 8  # GANs often require smaller batch sizes
 DATA_DIR = '../data_pets'
-NUM_EPOCHS = 5 # Start with this, GANs can take longer
-LR_G = 2e-4     # Learning rate for generator
-LR_D = 2e-4     # Learning rate for discriminator
+NUM_EPOCHS = 100 # Start with this, GANs can take longer
+LR_G = 1e-4     # Learning rate for generator
+LR_D = 1e-4     # Learning rate for discriminator
 BETA1 = 0.5     # Adam optimizer beta1
 LAMBDA_L1 = 100.0 # Weight for L1 reconstruction loss
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")

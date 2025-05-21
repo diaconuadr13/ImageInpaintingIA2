@@ -10,7 +10,7 @@ import numpy as np
 # --- Configuration ---
 IMG_SIZE = 128  # Resize images to this size (can be 224 or other common sizes too)
 BATCH_SIZE = 32 # Adjusted batch size, can be tuned
-DATA_DIR = './data_pets' # Directory to store dataset
+DATA_DIR = '../data_pets' # Directory to store dataset
 
 # --- 1. Transformations ---
 # Oxford-IIIT Pet images have varying sizes.

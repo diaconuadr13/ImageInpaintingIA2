@@ -1,0 +1,29 @@
+[
+    {
+        "optimizer_name": "Adam_Adam",
+        "generator_lr": 0.0001,
+        "discriminator_lr": 0.0001,
+        "final_avg_loss_g": 23.859295223070227,
+        "final_avg_loss_d": 0.4704387204154678,
+        "generator_model_path": "./gan_optimizer_ablation_results\\Adam_Adam\\netG_final.pth",
+        "output_dir": "./gan_optimizer_ablation_results\\Adam_Adam"
+    },
+    {
+        "optimizer_name": "SGD_SGD",
+        "generator_lr": 0.001,
+        "discriminator_lr": 0.001,
+        "final_avg_loss_g": 26.737533283233642,
+        "final_avg_loss_d": 0.5184684888824173,
+        "generator_model_path": "./gan_optimizer_ablation_results\\SGD_SGD\\netG_final.pth",
+        "output_dir": "./gan_optimizer_ablation_results\\SGD_SGD"
+    },
+    {
+        "optimizer_name": "RMSprop_RMSprop",
+        "generator_lr": 0.0001,
+        "discriminator_lr": 0.0001,
+        "final_avg_loss_g": 24.46961138766745,
+        "final_avg_loss_d": 0.4701755246390467,
+        "generator_model_path": "./gan_optimizer_ablation_results\\RMSprop_RMSprop\\netG_final.pth",
+        "output_dir": "./gan_optimizer_ablation_results\\RMSprop_RMSprop"
+    }
+]

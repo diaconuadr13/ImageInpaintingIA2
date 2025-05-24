@@ -1,0 +1,7 @@
+{
+    "variant_name": "GAN_Adam_Adam_DefaultLR_Best",
+    "generator_model_path": "./gan_optimizer_ablation_results/Adam_Adam/netG_final.pth",
+    "avg_l1_loss": 0.21537644342379988,
+    "avg_psnr": 20.022346529149594,
+    "avg_ssim": 0.7454972863197327
+}

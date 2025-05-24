@@ -1,0 +1,7 @@
+{
+    "variant_name": "GAN_SGD_SGD_DefaultLR_Best",
+    "generator_model_path": "./gan_optimizer_ablation_results/SGD_SGD/netG_final.pth",
+    "avg_l1_loss": 0.23618467322290024,
+    "avg_psnr": 19.999826376589436,
+    "avg_ssim": 0.7353737354278564
+}

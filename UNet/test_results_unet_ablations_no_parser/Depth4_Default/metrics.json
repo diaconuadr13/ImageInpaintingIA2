@@ -1,0 +1,7 @@
+{
+    "variant_name": "Depth4_Default",
+    "model_path": "./models_unet_depth_ablation/Depth4/unet_inpainting_final_Depth4.pth",
+    "avg_l1_loss": 0.21872173441824258,
+    "avg_psnr": 20.50741944784772,
+    "avg_ssim": 0.7604101896286011
+}

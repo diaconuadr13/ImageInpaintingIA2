@@ -1,0 +1,7 @@
+{
+    "variant_name": "GAN_lambda150_DefaultLR_Best",
+    "generator_model_path": "./gan_inpainting_results/lambda_150.0/netG_final.pth",
+    "avg_l1_loss": 0.21304842143739136,
+    "avg_psnr": 20.427325000537053,
+    "avg_ssim": 0.7476432919502258
+} 

@@ -198,11 +198,3 @@ The project includes several ablation studies to evaluate the impact of differen
     * Test metrics: Stored in subdirectories under `gan/gan_test_results_ablations_no_parser/` (e.g., `GAN_Adam_Adam_DefaultLR_Best/metrics2.json`, `GAN_SGD_SGD_DefaultLR_Best/metrics_sgd.json`, `GAN_rmsprop_rmsprop_DefaultLR_Best/metrics_rms.json`).
 
 The JSON files contain metrics such as average L1 loss, PSNR, and SSIM, which can be used to compare the performance of different model configurations.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a pull request or open an issue if you have suggestions or find any bugs.
-
-## License
-
-This project is open-sourced under the MIT License. (Or specify your chosen license)

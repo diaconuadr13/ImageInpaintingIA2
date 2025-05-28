@@ -4,11 +4,10 @@ import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
-import os # For saving models
+import os 
 from multiprocessing import freeze_support
-from tqdm import tqdm # <--- IMPORT TQDM
+from tqdm import tqdm 
 
-# Assuming your Pet dataset loader script is named 'data_loader.py'
 from data_loader import OxfordPetInpaintingDataset, transform
 
 class UNetConvBlock(nn.Module):
@@ -105,43 +104,17 @@ class UNet5(nn.Module): # This is UNet_Depth5
         self.bilinear = bilinear
         factor = 2 if bilinear else 1
 
-        # Encoder
-        self.inc = UNetConvBlock(n_channels_in, 64)     # x1: 64
-        self.down1 = Down(64, 128)                      # x2: 128
-        self.down2 = Down(128, 256)                     # x3: 256
-        self.down3 = Down(256, 512)                     # x4: 512
-        self.down4 = Down(512, 1024 // factor)          # x5: 1024//factor (e.g., 512 if bilinear)
-        self.down5 = Down(1024 // factor, 2048 // factor) # x6 (bottleneck): 2048//factor (e.g., 1024 if bilinear)
+        self.inc = UNetConvBlock(n_channels_in, 64)     
+        self.down1 = Down(64, 128)                      
+        self.down2 = Down(128, 256)                     
+        self.down3 = Down(256, 512)                     
+        self.down4 = Down(512, 1024 // factor)          
+        self.down5 = Down(1024 // factor, 2048 // factor) 
 
-        # Decoder
-        # up_stage1 (deepest): Takes bottleneck (x6) and skip from down4 (x5)
-        # x6 (upsampled) has 2048//factor channels. x5 (skip) has 1024//factor channels.
-        # Total input: (2048//factor) + (1024//factor)
-        # Output channels: 1024//factor
         self.up1 = Up((2048//factor) + (1024//factor), 1024 // factor, bilinear)
-
-        # up_stage2: Takes output of up_stage1 and skip from down3 (x4)
-        # up_stage1_out (upsampled) has 1024//factor channels. x4 (skip) has 512 channels.
-        # Total input: (1024//factor) + 512
-        # Output channels: 512//factor
         self.up2 = Up((1024//factor) + 512, 512 // factor, bilinear)
-
-        # up_stage3: Takes output of up_stage2 and skip from down2 (x3)
-        # up_stage2_out (upsampled) has 512//factor channels. x3 (skip) has 256 channels.
-        # Total input: (512//factor) + 256
-        # Output channels: 256//factor
         self.up3 = Up((512//factor) + 256, 256 // factor, bilinear)
-
-        # up_stage4: Takes output of up_stage3 and skip from down1 (x2)
-        # up_stage3_out (upsampled) has 256//factor channels. x2 (skip) has 128 channels.
-        # Total input: (256//factor) + 128
-        # Output channels: 128//factor
         self.up4 = Up((256//factor) + 128, 128 // factor, bilinear)
-
-        # up_stage5 (shallowest up): Takes output of up_stage4 and skip from inc (x1)
-        # up_stage4_out (upsampled) has 128//factor channels. x1 (skip) has 64 channels.
-        # Total input: (128//factor) + 64
-        # Output channels: 64
         self.up5 = Up((128//factor) + 64, 64, bilinear)
 
         self.outc = OutConv(64, n_channels_out)
@@ -152,9 +125,9 @@ class UNet5(nn.Module): # This is UNet_Depth5
         x3 = self.down2(x2)
         x4 = self.down3(x3)
         x5 = self.down4(x4)
-        x6 = self.down5(x5) # Bottleneck
+        x6 = self.down5(x5)
 
-        out = self.up1(x6, x5) # x6 is from lower layer, x5 is skip
+        out = self.up1(x6, x5)
         out = self.up2(out, x4)
         out = self.up3(out, x3)
         out = self.up4(out, x2)
@@ -162,40 +135,21 @@ class UNet5(nn.Module): # This is UNet_Depth5
         logits = self.outc(out)
         return logits
     
-class UNet3(nn.Module): # This is UNet_Depth3
+class UNet3(nn.Module):
     def __init__(self, n_channels_in=3, n_channels_out=3, bilinear=True):
         super().__init__()
         self.n_channels_in = n_channels_in
         self.n_channels_out = n_channels_out
         self.bilinear = bilinear
-        factor = 2 if bilinear else 1 # factor for channel reduction in Up blocks if bilinear
+        factor = 2 if bilinear else 1 
 
-        # Encoder
-        self.inc = UNetConvBlock(n_channels_in, 64)     # x1: 64 channels
-        self.down1 = Down(64, 128)                      # x2: 128 channels
-        self.down2 = Down(128, 256)                     # x3: 256 channels
-        self.down3 = Down(256, 512 // factor)           # x4 (bottleneck for Depth3): 512//factor channels (e.g. 256 if bilinear)
+        self.inc = UNetConvBlock(n_channels_in, 64)     
+        self.down1 = Down(64, 128)                      
+        self.down2 = Down(128, 256)                     
+        self.down3 = Down(256, 512 // factor)          
 
-        # Decoder
-        # For Up(in_total_ch, out_ch_of_block, bilinear)
-        # in_total_ch = (channels from previous up-layer after upsample) + (channels from skip connection)
-        
-        # up_stage1: Takes bottleneck (x4) and skip from down2 (x3)
-        # x4 (upsampled) will have 512//factor channels. x3 (skip) has 256 channels.
-        # Total input to UNetConvBlock in Up: (512//factor) + 256
-        # Output channels of this Up block: 256//factor
         self.up1 = Up((512//factor) + 256, 256 // factor, bilinear)
-
-        # up_stage2: Takes output of up_stage1 and skip from down1 (x2)
-        # up_stage1_out (upsampled) will have 256//factor channels. x2 (skip) has 128 channels.
-        # Total input to UNetConvBlock in Up: (256//factor) + 128
-        # Output channels of this Up block: 128//factor
         self.up2 = Up((256//factor) + 128, 128 // factor, bilinear)
-
-        # up_stage3: Takes output of up_stage2 and skip from inc (x1)
-        # up_stage2_out (upsampled) will have 128//factor channels. x1 (skip) has 64 channels.
-        # Total input to UNetConvBlock in Up: (128//factor) + 64
-        # Output channels of this Up block: 64
         self.up3 = Up((128//factor) + 64, 64, bilinear)
         
         self.outc = OutConv(64, n_channels_out)
@@ -204,9 +158,9 @@ class UNet3(nn.Module): # This is UNet_Depth3
         x1 = self.inc(x)
         x2 = self.down1(x1)
         x3 = self.down2(x2)
-        x4 = self.down3(x3) # Bottleneck
+        x4 = self.down3(x3) 
 
-        out = self.up1(x4, x3) # x4 is from lower layer, x3 is skip
+        out = self.up1(x4, x3) 
         out = self.up2(out, x2)
         out = self.up3(out, x1)
         logits = self.outc(out)

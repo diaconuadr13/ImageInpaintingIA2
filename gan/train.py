@@ -45,10 +45,10 @@ if __name__ == '__main__':
     print(f"Loading dataset from {DATA_DIR_CONFIG}...")
     train_dataset = OxfordPetInpaintingDataset(
         root_dir=DATA_DIR_CONFIG, split='trainval', transform=transform, download=True
-    ) #
+    ) 
     train_dataloader = DataLoader(
         train_dataset, batch_size=BATCH_SIZE_CONFIG, shuffle=True, num_workers=0
-    ) #
+    ) 
 
     for optim_name, G_OptimClass, D_OptimClass, current_g_lr, current_d_lr, g_optim_params, d_optim_params in optimizer_configurations:
         print(f"\n\n===== Starting GAN Training with Optimizers: {optim_name} (G_LR:{current_g_lr}, D_LR:{current_d_lr}) =====")
@@ -111,7 +111,7 @@ if __name__ == '__main__':
                 progress_bar.set_postfix({
                     'Loss_D': f"{loss_D.item():.4f}", 'Loss_G': f"{loss_G.item():.4f}",
                     'Loss_G_GAN': f"{loss_G_GAN.item():.4f}", 'Loss_G_L1': f"{loss_G_L1.item()/LAMBDA_L1_CONFIG:.4f}"
-                }) #
+                }) 
 
             avg_loss_g_final_epoch = total_loss_g_epoch / len(train_dataloader)
             avg_loss_d_final_epoch = total_loss_d_epoch / len(train_dataloader)
@@ -140,8 +140,8 @@ if __name__ == '__main__':
         print(f"GAN Training Finished for optimizers: {optim_name}.")
         final_g_model_path = os.path.join(OUTPUT_DIR, 'netG_final.pth')
         final_d_model_path = os.path.join(OUTPUT_DIR, 'netD_final.pth')
-        torch.save(netG.state_dict(), final_g_model_path) #
-        torch.save(netD.state_dict(), final_d_model_path) #
+        torch.save(netG.state_dict(), final_g_model_path) 
+        torch.save(netD.state_dict(), final_d_model_path) 
         print(f"Final models for {optim_name} saved to {OUTPUT_DIR}")
 
         all_gan_experiment_results.append({

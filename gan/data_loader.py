@@ -7,19 +7,16 @@ import os
 import random
 import numpy as np
 
-# --- Configuration ---
 IMG_SIZE = 128  
 BATCH_SIZE = 32 
 DATA_DIR = '../data_pets' 
 
-# --- 1. Transformations ---
 transform = transforms.Compose([
     transforms.Resize((IMG_SIZE, IMG_SIZE)),
     transforms.ToTensor(), 
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]) 
 ])
 
-# --- 2. Mask Generation Function (same as before) ---
 def generate_random_mask(img_tensor, min_mask_ratio=0.10, max_mask_ratio=0.10): 
     c, h, w = img_tensor.shape
     mask = torch.zeros((1, h, w), dtype=torch.float32)
@@ -43,7 +40,6 @@ def generate_random_mask(img_tensor, min_mask_ratio=0.10, max_mask_ratio=0.10):
     mask[:, top_y : top_y + mask_h, left_x : left_x + mask_w] = 1.0
     return mask
 
-# --- 3. Custom Oxford-IIIT Pet Inpainting Dataset ---
 class OxfordPetInpaintingDataset(Dataset):
     def __init__(self, root_dir, split='trainval', transform=None, download=True):
         self.transform = transform
@@ -70,7 +66,6 @@ class OxfordPetInpaintingDataset(Dataset):
 
         return masked_img_tensor, original_img_tensor, mask
 
-# --- 4. Example Usage: DataLoader ---
 if __name__ == '__main__':
     print("Attempting to download and prepare Oxford-IIIT Pet dataset...")
     try:

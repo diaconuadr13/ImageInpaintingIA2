@@ -11,7 +11,7 @@ from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 import matplotlib.pyplot as plt
 import json 
 
-from data_loader import OxfordPetInpaintingDataset, transform #
+from data_loader import OxfordPetInpaintingDataset, transform 
 from UNet import UNet 
 from UNet import  UNet5 
 
@@ -125,7 +125,7 @@ def run_gan_test(generator_model_path, generator_class_name, variant_name, resul
         'avg_psnr': float(avg_psnr),       
         'avg_ssim': float(avg_ssim)         
     }
-    print(f"\n--- GAN Test Results for {variant_name} (Generator Performance) ---") #
+    print(f"\n--- GAN Test Results for {variant_name} (Generator Performance) ---") 
     print(f"Average L1 Loss: {metrics['avg_l1_loss']:.4f}")
     print(f"Average PSNR:    {metrics['avg_psnr']:.2f} dB")
     print(f"Average SSIM:    {metrics['avg_ssim']:.4f}")

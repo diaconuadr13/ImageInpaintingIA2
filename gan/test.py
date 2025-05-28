@@ -9,32 +9,23 @@ from tqdm import tqdm
 import numpy as np
 from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 import matplotlib.pyplot as plt
-# Removed argparse
-import json # For saving metrics
+import json 
 
-# Assuming your data_loader.py and UNet.py (for Generator) are accessible
 from data_loader import OxfordPetInpaintingDataset, transform #
-from UNet import UNet # Generator Model
-# If your GAN generator can have depth variants (UNet3, UNet5), import them too.
-# from UNet import UNet3, UNet5 
+from UNet import UNet 
+from UNet import  UNet5 
 
-# ==============================================================================
-# ======== USER CONFIGURATION: EDIT THESE VALUES BEFORE RUNNING ========
-# ==============================================================================
-GENERATOR_MODEL_PATH_TO_TEST = './gan_inpainting_results/lambda_150.0/netG_final.pth' #<-- EDIT THIS
-GENERATOR_CLASS_NAME_TO_TEST = "UNet" # Options: "UNet", "UNet3", "UNet5" (if applicable for GAN generator) #<-- EDIT THIS
-VARIANT_NAME_FOR_OUTPUTS = "GAN_lambda150_DefaultLR_Best" #<-- EDIT THIS (e.g., "GAN_SGD_SGD_LR1e-3_Best")
-RESULTS_BASE_DIR = './gan_test_results_ablations_no_parser' # Base directory for these test results
-# ==============================================================================
+GENERATOR_MODEL_PATH_TO_TEST = './gan_optimizer_ablation_results/RMSprop_RMSprop/netG_final.pth' 
+GENERATOR_CLASS_NAME_TO_TEST = "UNet" 
+VARIANT_NAME_FOR_OUTPUTS = "GAN_rmsprop_rmsprop_DefaultLR_Best" 
+RESULTS_BASE_DIR = './gan_test_results_ablations_no_parser' 
 
-# --- Static Configuration (Defaults) ---
 IMG_SIZE_CONFIG = 128
-BATCH_SIZE_CONFIG = 16 # Your gan/test.py used 16
-DATA_DIR_CONFIG = '../data_pets' # Your gan/test.py used '../data_pets'
+BATCH_SIZE_CONFIG = 16 
+DATA_DIR_CONFIG = '../data_pets' 
 DEVICE_CONFIG = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-FIXED_SAMPLES_DIR = './fixed_test_samples' # Directory where fixed samples are saved
+FIXED_SAMPLES_DIR = './fixed_test_samples' 
 
-# --- Utility for denormalization ---
 def denormalize_imagenet(tensor): #
     denorm_transform = transforms.Compose([
         transforms.Normalize(mean=[0., 0., 0.], std=[1/0.229, 1/0.224, 1/0.225]),
@@ -42,7 +33,6 @@ def denormalize_imagenet(tensor): #
     ])
     return torch.clamp(denorm_transform(tensor), 0, 1)
 
-# --- Main Testing Function ---
 def run_gan_test(generator_model_path, generator_class_name, variant_name, results_base_dir):
     print(f"Starting GAN testing for variant: {variant_name}")
     print(f"Generator Model Path: {generator_model_path}")
@@ -63,14 +53,12 @@ def run_gan_test(generator_model_path, generator_class_name, variant_name, resul
     if not os.path.exists(general_test_samples_dir):
         os.makedirs(general_test_samples_dir)
 
-    # --- Load Generator Model ---
     if generator_class_name == "UNet":
         gen_model_class = UNet
-    # Add UNet3, UNet5 conditions if your GAN generator might use these depths
-    # elif generator_class_name == "UNet3":
-    #     gen_model_class = UNet3 # Make sure UNet3 is imported
-    # elif generator_class_name == "UNet5":
-    #     gen_model_class = UNet5 # Make sure UNet5 is imported
+    elif generator_class_name == "UNet3":
+        gen_model_class = UNet3 
+    elif generator_class_name == "UNet5":
+        gen_model_class = UNet5 #
     else:
         print(f"Warning: Unknown generator class name '{generator_class_name}'. Defaulting to 'UNet'.")
         gen_model_class = UNet
@@ -83,19 +71,18 @@ def run_gan_test(generator_model_path, generator_class_name, variant_name, resul
         return
     netG.eval()
 
-    # --- 1. Evaluation on the general test set for metrics ---
     print(f"\nEvaluating GAN generator {variant_name} on general test set for metrics...")
     test_dataset = OxfordPetInpaintingDataset(
         root_dir=DATA_DIR_CONFIG, split='test', transform=transform, download=True
-    ) #
+    ) 
     test_dataloader = DataLoader(
         test_dataset, batch_size=BATCH_SIZE_CONFIG, shuffle=False, num_workers=0
-    ) #
+    ) 
 
     total_l1_loss, total_psnr, total_ssim, num_samples = 0.0, 0.0, 0.0, 0
-    criterion_l1 = nn.L1Loss() #
+    criterion_l1 = nn.L1Loss() 
 
-    with torch.no_grad(): #
+    with torch.no_grad(): 
         for i, (masked_images, original_images, masks) in enumerate(tqdm(test_dataloader, desc=f"Testing GAN {variant_name}")):
             masked_images = masked_images.to(DEVICE_CONFIG)
             original_images = original_images.to(DEVICE_CONFIG)
@@ -116,14 +103,14 @@ def run_gan_test(generator_model_path, generator_class_name, variant_name, resul
                 total_ssim += ssim_val
             num_samples += batch_size_current
 
-            if i < 1: # Save samples from the first general test batch
+            if i < 1: 
                 for j_gen in range(min(4, batch_size_current)): #
                     idx_in_dataset = i * BATCH_SIZE_CONFIG + j_gen
                     save_masked_gen = denormalize_imagenet(masked_images[j_gen].cpu())
                     save_generated_gen = denormalize_imagenet(generated_images[j_gen].cpu())
                     save_original_gen = denormalize_imagenet(original_images[j_gen].cpu())
                     save_mask_vis_gen = masks[j_gen].cpu().repeat(3, 1, 1)
-                    comparison_img_tensor_gen = torch.cat((save_masked_gen, save_mask_vis_gen, save_generated_gen, save_original_gen), dim=2) #
+                    comparison_img_tensor_gen = torch.cat((save_masked_gen, save_generated_gen, save_original_gen), dim=2) #
                     torchvision.utils.save_image(comparison_img_tensor_gen,
                                                  os.path.join(general_test_samples_dir, f"general_gan_sample_{idx_in_dataset}_comparison.png"))
 
@@ -131,30 +118,27 @@ def run_gan_test(generator_model_path, generator_class_name, variant_name, resul
     avg_psnr = total_psnr / num_samples if num_samples > 0 else 0.0
     avg_ssim = total_ssim / num_samples if num_samples > 0 else 0.0
 
-    # FIX: Convert metrics to standard Python floats before adding to dictionary
     metrics = {
         'variant_name': variant_name,
         'generator_model_path': generator_model_path,
-        'avg_l1_loss': float(avg_l1_loss),    # <--- CONVERT HERE
-        'avg_psnr': float(avg_psnr),        # <--- CONVERT HERE
-        'avg_ssim': float(avg_ssim)         # <--- CONVERT HERE
+        'avg_l1_loss': float(avg_l1_loss),    
+        'avg_psnr': float(avg_psnr),       
+        'avg_ssim': float(avg_ssim)         
     }
     print(f"\n--- GAN Test Results for {variant_name} (Generator Performance) ---") #
     print(f"Average L1 Loss: {metrics['avg_l1_loss']:.4f}")
     print(f"Average PSNR:    {metrics['avg_psnr']:.2f} dB")
     print(f"Average SSIM:    {metrics['avg_ssim']:.4f}")
 
-    with open(os.path.join(variant_results_dir, 'lambda150.json'), 'w') as f:
+    with open(os.path.join(variant_results_dir, 'lambda100.json'), 'w') as f:
         json.dump(metrics, f, indent=4)
     print(f"Metrics saved to {os.path.join(variant_results_dir, 'metric_rms.json')}")
 
 
-    # --- 2. Generate comparisons on the FIXED test samples ---
     print(f"\nGenerating comparisons for GAN {variant_name} on FIXED samples...")
     try:
         fixed_masked_images = torch.load(os.path.join(FIXED_SAMPLES_DIR, 'fixed_masked_images.pt')).to(DEVICE_CONFIG)
         fixed_original_images = torch.load(os.path.join(FIXED_SAMPLES_DIR, 'fixed_original_images.pt')).to(DEVICE_CONFIG)
-        # Load masks and ensure they are Bx3xHxW for visualization
         fixed_masks_batch = torch.load(os.path.join(FIXED_SAMPLES_DIR, 'fixed_masks.pt')).cpu()
         if fixed_masks_batch.dim() == 3: 
             if fixed_masks_batch.size(0) == 1 : 
@@ -174,10 +158,10 @@ def run_gan_test(generator_model_path, generator_class_name, variant_name, resul
             s_generated = denormalize_imagenet(generated_fixed_images[j].cpu())
             s_original = denormalize_imagenet(fixed_original_images[j].cpu())
             s_mask_vis = fixed_masks_batch[j]
-            if s_mask_vis.dim() == 4: s_mask_vis = s_mask_vis.squeeze(0) # If BxCxHxW and B=1
-            if s_mask_vis.size(0) == 1: s_mask_vis = s_mask_vis.repeat(3,1,1) # If 1xHxW, make 3xHxW
+            if s_mask_vis.dim() == 4: s_mask_vis = s_mask_vis.squeeze(0) 
+            if s_mask_vis.size(0) == 1: s_mask_vis = s_mask_vis.repeat(3,1,1) 
 
-            comparison_tensor = torch.cat((s_masked, s_mask_vis, s_generated, s_original), dim=2)
+            comparison_tensor = torch.cat((s_masked, s_generated, s_original), dim=2)
             img_path = os.path.join(fixed_samples_comparison_dir, f"fixed_sample_{j}_{variant_name}_comparison.png")
             torchvision.utils.save_image(comparison_tensor, img_path)
     print(f"Fixed sample comparison images saved to {fixed_samples_comparison_dir}")
@@ -185,7 +169,6 @@ def run_gan_test(generator_model_path, generator_class_name, variant_name, resul
 
 
 if __name__ == '__main__':
-    # Call the main testing function with the hardcoded/editable values from the top
     run_gan_test(
         generator_model_path=GENERATOR_MODEL_PATH_TO_TEST,
         generator_class_name=GENERATOR_CLASS_NAME_TO_TEST,

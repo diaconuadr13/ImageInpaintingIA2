@@ -4,12 +4,11 @@ import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
-import os # For saving models
+import os
 from multiprocessing import freeze_support
-from tqdm import tqdm # <--- IMPORT TQDM
+from tqdm import tqdm 
 
-# Assuming your Pet dataset loader script is named 'data_loader.py'
-from data_loader import OxfordPetInpaintingDataset, transform
+from data_loader import OxfordPetInpaintingDataset
 
 class UNetConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels, mid_channels=None):
@@ -60,7 +59,7 @@ class Up(nn.Module):
 
 class OutConv(nn.Module):
     def __init__(self, in_channels, out_channels):
-        super(OutConv, self).__init__()
+        super().__init__()
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1)
 
     def forward(self, x):
@@ -68,7 +67,7 @@ class OutConv(nn.Module):
 
 class UNet(nn.Module):
     def __init__(self, n_channels_in=3, n_channels_out=3, bilinear=True):
-        super(UNet, self).__init__()
+        super().__init__()
         self.n_channels_in = n_channels_in
         self.n_channels_out = n_channels_out
         self.bilinear = bilinear
@@ -95,4 +94,75 @@ class UNet(nn.Module):
         x_up3 = self.up3(x_up2, x2)
         x_up4 = self.up4(x_up3, x1)
         logits = self.outc(x_up4)
+        return logits
+    
+class UNet5(nn.Module): 
+    def __init__(self, n_channels_in=3, n_channels_out=3, bilinear=True):
+        super().__init__()
+        self.n_channels_in = n_channels_in
+        self.n_channels_out = n_channels_out
+        self.bilinear = bilinear
+        factor = 2 if bilinear else 1
+
+        self.inc = UNetConvBlock(n_channels_in, 64)     
+        self.down1 = Down(64, 128)                      
+        self.down2 = Down(128, 256)                   
+        self.down3 = Down(256, 512)                     
+        self.down4 = Down(512, 1024 // factor)          
+        self.down5 = Down(1024 // factor, 2048 // factor) 
+
+        self.up1 = Up((2048//factor) + (1024//factor), 1024 // factor, bilinear)
+        self.up2 = Up((1024//factor) + 512, 512 // factor, bilinear)
+        self.up3 = Up((512//factor) + 256, 256 // factor, bilinear)
+        self.up4 = Up((256//factor) + 128, 128 // factor, bilinear)
+        self.up5 = Up((128//factor) + 64, 64, bilinear)
+
+        self.outc = OutConv(64, n_channels_out)
+
+    def forward(self, x):
+        x1 = self.inc(x)
+        x2 = self.down1(x1)
+        x3 = self.down2(x2)
+        x4 = self.down3(x3)
+        x5 = self.down4(x4)
+        x6 = self.down5(x5) 
+
+        out = self.up1(x6, x5) 
+        out = self.up2(out, x4)
+        out = self.up3(out, x3)
+        out = self.up4(out, x2)
+        out = self.up5(out, x1)
+        logits = self.outc(out)
+        return logits
+    
+class UNet3(nn.Module): 
+    def __init__(self, n_channels_in=3, n_channels_out=3, bilinear=True):
+        super().__init__()
+        self.n_channels_in = n_channels_in
+        self.n_channels_out = n_channels_out
+        self.bilinear = bilinear
+        factor = 2 if bilinear else 1 
+
+        # Encoder
+        self.inc = UNetConvBlock(n_channels_in, 64)     
+        self.down1 = Down(64, 128)                      
+        self.down2 = Down(128, 256)                   
+        self.down3 = Down(256, 512 // factor)          
+
+        self.up1 = Up((512//factor) + 256, 256 // factor, bilinear)
+        self.up2 = Up((256//factor) + 128, 128 // factor, bilinear)
+        self.up3 = Up((128//factor) + 64, 64, bilinear)
+        
+        self.outc = OutConv(64, n_channels_out)
+
+    def forward(self, x):
+        x1 = self.inc(x)
+        x2 = self.down1(x1)
+        x3 = self.down2(x2)
+        x4 = self.down3(x3)
+
+        out = self.up1(x4, x3) 
+        out = self.up2(out, x2)
+        out = self.up3(out, x1)
+        logits = self.outc(out)
         return logits

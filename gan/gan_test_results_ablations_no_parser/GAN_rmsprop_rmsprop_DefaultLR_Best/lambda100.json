@@ -1,0 +1,7 @@
+{
+    "variant_name": "GAN_rmsprop_rmsprop_DefaultLR_Best",
+    "generator_model_path": "./gan_optimizer_ablation_results/RMSprop_RMSprop/netG_final.pth",
+    "avg_l1_loss": 0.09065580671223154,
+    "avg_psnr": 26.08048866520509,
+    "avg_ssim": 0.913884699344635
+}

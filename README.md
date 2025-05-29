@@ -133,7 +133,7 @@ All training and testing scripts are configured with default parameters. You mig
     python train.py
     ```
     Models (generator and discriminator) and a `gan_optimizer_ablation_summary.json` will be saved in `gan/gan_optimizer_ablation_results/`.
-    *Note: The script structure also implies previous experiments for L1 lambda ablation, results of which are in `gan/gan_inpainting_results/`. You might need a different version of `train.py` or modify the current one to reproduce those specific lambda experiments.*
+    *Note: The script structure also implies previous experiments for L1 lambda ablation, results of which are in `gan/gan_inpainting_results/`. You might need to modify `train.py` to reproduce those specific lambda experiments.*
 
 **2. Testing GAN Models (Generator):**
 * The `gan/test.py` script is used for evaluating the trained GAN generator.

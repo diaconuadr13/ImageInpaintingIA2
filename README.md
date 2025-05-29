@@ -15,8 +15,6 @@ This project explores image inpainting techniques using deep learning models (U-
     * [U-Net](#u-net)
     * [GAN](#gan)
 7.  [Ablation Studies and Results](#ablation-studies-and-results)
-8.  [Contributing](#contributing)
-9.  [License](#license)
 
 ## Overview
 
